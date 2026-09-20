@@ -86,4 +86,154 @@ function updateTransactions(transactions) {
 }
 
 // Initialize
-document.addEventListener('DOMContentLoaded', fetchDashboardData);
+document.addEventListener('DOMContentLoaded', () => {
+    fetchDashboardData();
+    setupVoiceRecording();
+});
+
+// Voice Recording Logic
+const COLAB_ENDPOINT = 'YOUR_COLAB_ENDPOINT_URL_HERE'; // Replace with your actual Colab URL
+
+function setupVoiceRecording() {
+    const recordBtn = document.getElementById('record-btn');
+    if (!recordBtn) return;
+
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+    let isButtonPressed = false; // Track physical button state
+    let persistentStream = null; // Keep the mic active to avoid re-prompting
+
+    // Check for browser support
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn('MediaDevices API not supported.');
+        return;
+    }
+
+    let recordingStartTime = 0;
+
+    const startRecording = async () => {
+        if (isButtonPressed) return; // Prevent double triggers
+        isButtonPressed = true;
+
+        try {
+            if (!persistentStream) {
+                persistentStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            }
+            
+            // If user released the button while we were waiting for permissions (first time)
+            if (!isButtonPressed) {
+                return;
+            }
+
+            mediaRecorder = new MediaRecorder(persistentStream);
+            audioChunks = [];
+
+            mediaRecorder.addEventListener('dataavailable', event => {
+                audioChunks.push(event.data);
+            });
+
+            mediaRecorder.addEventListener('stop', async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const recordingDuration = Date.now() - recordingStartTime;
+                
+                // Only send if the recording is longer than 500ms 
+                // to prevent accidental clicks from sending empty files
+                if (audioChunks.length > 0 && recordingDuration > 500) {
+                    await sendAudioToColab(audioBlob);
+                } else {
+                    console.log("Recording too short, discarding.");
+                }
+            });
+
+            mediaRecorder.start();
+            recordingStartTime = Date.now();
+            isRecording = true;
+            recordBtn.classList.add('recording');
+        } catch (err) {
+            console.error('Error accessing microphone:', err);
+            alert('Could not access microphone. Please check permissions.');
+            isButtonPressed = false;
+            persistentStream = null;
+        }
+    };
+
+    const stopRecording = () => {
+        isButtonPressed = false;
+        if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+            isRecording = false;
+            recordBtn.classList.remove('recording');
+        }
+    };
+
+    // Mouse events
+    recordBtn.addEventListener('mousedown', startRecording);
+    recordBtn.addEventListener('mouseup', stopRecording);
+    recordBtn.addEventListener('mouseleave', stopRecording); // Stop if cursor leaves button
+    
+    // Handle touch events for mobile devices
+    recordBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        startRecording();
+    });
+    
+    recordBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        stopRecording();
+    });
+    
+    recordBtn.addEventListener('touchcancel', (e) => {
+        e.preventDefault();
+        stopRecording();
+    });
+}
+
+async function sendAudioToColab(audioBlob) {
+    try {
+        console.log("Sending audio to Colab endpoint...");
+        
+        const formData = new FormData();
+        // Append the file (most python endpoints expect 'file' as the form field)
+        formData.append('file', audioBlob, 'voice_input.webm');
+
+        const response = await fetch(COLAB_ENDPOINT, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to send audio to Colab');
+        }
+
+        const data = await response.json();
+        console.log('Received text from Colab:', data.text);
+        alert('Extracted Text: ' + data.text);
+        
+        // NEXT STEPS: send 'data.text' to your FastAPI backend 
+        // to categorize and save it to data.json
+        
+    } catch (error) {
+        console.error('Error sending audio (endpoint might be down):', error);
+        alert('Colab endpoint unreachable. Saving the audio locally instead.');
+        saveAudioLocally(audioBlob);
+    }
+}
+
+function saveAudioLocally(audioBlob) {
+    const url = URL.createObjectURL(audioBlob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    // Generate a unique filename using the current timestamp
+    a.download = `voice_input_${new Date().getTime()}.webm`;
+    
+    document.body.appendChild(a);
+    a.click();
+    
+    // Cleanup
+    setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }, 100);
+}
