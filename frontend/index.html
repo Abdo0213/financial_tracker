@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Tracker Wallet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="wallet-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="user-info">
+                <div class="avatar"></div>
+                <div>
+                    <h1>Welcome back,</h1>
+                    <p>Track your finances</p>
+                </div>
+            </div>
+            <button class="voice-btn" title="Voice Input (Coming Soon)">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Balance Card -->
+        <section class="balance-card">
+            <h2>Total Balance</h2>
+            <div class="balance-amount" id="total-balance">$0.00</div>
+            <div class="progress-container">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="budget-progress"></div>
+                </div>
+                <div class="budget-text">
+                    <span id="spent-amount">$0.00</span> spent of <span id="budget-amount">$0.00</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories -->
+        <section class="categories-section">
+            <h3>Quick Categories</h3>
+            <div class="categories-grid">
+                <div class="category-item food">
+                    <div class="icon">🍔</div>
+                    <span>Food</span>
+                </div>
+                <div class="category-item transport">
+                    <div class="icon">🚗</div>
+                    <span>Transport</span>
+                </div>
+                <div class="category-item entertainment">
+                    <div class="icon">🎬</div>
+                    <span>Fun</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Goals -->
+        <section class="goals-section">
+            <h3>Saving Goals</h3>
+            <div class="goals-list" id="goals-list">
+                <!-- Goals will be injected here -->
+            </div>
+        </section>
+
+        <!-- Recent Transactions -->
+        <section class="transactions-section">
+            <div class="section-header">
+                <h3>Recent Transactions</h3>
+                <a href="#" class="view-all">View All</a>
+            </div>
+            <div class="transaction-list" id="transaction-list">
+                <!-- Transactions will be injected here -->
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
