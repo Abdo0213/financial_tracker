@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Voice Recording Logic
-const COLAB_ENDPOINT = 'YOUR_COLAB_ENDPOINT_URL_HERE'; // Replace with your actual Colab URL
+const COLAB_ENDPOINT = 'http://localhost:8000/api/process_audio'; // Pointing to local FastAPI backend
 
 function setupVoiceRecording() {
     const recordBtn = document.getElementById('record-btn');
