@@ -1,2 +1,7 @@
 fastapi
 uvicorn
+
+# Orchestrator Agent dependencies
+langchain-openai>=0.2.0      # LangChain + OpenAI integration (pulls langchain-core)
+pydantic>=2.0                # Structured output & validation
+python-dotenv>=1.0           # Load .env credentials automatically
