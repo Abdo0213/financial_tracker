@@ -24,6 +24,7 @@ Configuration is read from the same .env used by the other agents:
 import json
 import logging
 import os
+import re
 from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
@@ -331,17 +332,24 @@ class CategorizationAgent:
         """
         Re-invoke the plain LLM, parse JSON manually, and return category list.
         If parsing fails, returns 'other' for every transaction.
+
+        FIX-4: Use regex to find the first JSON object in the response so that
+        preamble text or code fences don't cause silent 'other' fallbacks.
         """
         plain_chain = self._prompt | self._llm
         try:
             response: AIMessage = plain_chain.invoke(payload)
             raw = response.content if hasattr(response, "content") else str(response)
-            raw = raw.strip()
-            if raw.startswith("```"):
-                raw = raw.split("```")[1]
-                if raw.startswith("json"):
-                    raw = raw[4:]
-            data: Dict[str, Any] = json.loads(raw)
+
+            # FIX-4: Extract the first {...} block regardless of surrounding text or fences.
+            match = re.search(r"\{.*\}", raw, re.DOTALL)
+            if not match:
+                logger.error(
+                    "Categorizer raw-JSON fallback: no JSON object found. Raw: %r", raw[:200]
+                )
+                return ["other"] * expected_count
+
+            data: Dict[str, Any] = json.loads(match.group())
             cats = data.get("categories", [])
             if isinstance(cats, list):
                 return cats

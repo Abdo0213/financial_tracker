@@ -24,6 +24,7 @@ Configuration is read from the same .env as the Orchestrator:
 import json
 import logging
 import os
+import re
 from typing import Any, Dict, List
 
 from dotenv import load_dotenv
@@ -258,22 +259,28 @@ class ExtractionAgent:
         """
         Re-invoke the plain LLM (no structured output), parse the JSON
         manually, and build ExtractionResult skipping invalid items.
+
+        FIX-4: Use regex to extract the first JSON object block from the raw
+        response, so preamble prose (e.g. "Here is the JSON: ```json ...") or
+        code fences anywhere in the string no longer cause a parse failure.
         """
         plain_chain = self._prompt | self._llm
         response: AIMessage = plain_chain.invoke({"transcript": transcript})
         raw_text = response.content if hasattr(response, "content") else str(response)
 
-        # Strip markdown code fences if present
-        raw_text = raw_text.strip()
-        if raw_text.startswith("```"):
-            raw_text = raw_text.split("```")[1]
-            if raw_text.startswith("json"):
-                raw_text = raw_text[4:]
+        # FIX-4: Extract the first {...} block regardless of surrounding text or fences.
+        match = re.search(r"\{.*\}", raw_text, re.DOTALL)
+        if not match:
+            logger.error(
+                "Raw JSON fallback: no JSON object found in model output. "
+                "Raw: %r", raw_text[:200]
+            )
+            return ExtractionResult(transactions=[])
 
         try:
-            data: Dict[str, Any] = json.loads(raw_text)
-        except json.JSONDecodeError:
-            logger.error("Raw JSON fallback could not parse model output. Returning empty.")
+            data: Dict[str, Any] = json.loads(match.group())
+        except json.JSONDecodeError as exc:
+            logger.error("Raw JSON fallback could not parse extracted block: %s. Returning empty.", exc)
             return ExtractionResult(transactions=[])
 
         transactions: List[Transaction] = []

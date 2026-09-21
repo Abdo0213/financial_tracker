@@ -31,15 +31,33 @@
         <!-- Balance Card -->
         <section class="balance-card">
             <h2>Total Balance</h2>
-            <div class="balance-amount" id="total-balance">$0.00</div>
+            <div class="balance-amount" id="total-balance">EGP 0.00</div>
             <div class="progress-container">
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" id="budget-progress"></div>
                 </div>
                 <div class="budget-text">
-                    <span id="spent-amount">$0.00</span> spent of <span id="budget-amount">$0.00</span>
+                    <span id="spent-amount">EGP 0.00</span> spent of <span id="budget-amount">EGP 0.00</span>
                 </div>
             </div>
+        </section>
+
+        <!-- Quick Text Input Form -->
+        <section class="text-input-section">
+            <form id="text-input-form" class="text-input-form">
+                <input 
+                    type="text" 
+                    id="text-input" 
+                    placeholder="Enter transaction (e.g. دفعت 50 جنيه قهوة)..." 
+                    autocomplete="off"
+                />
+                <button type="submit" id="send-text-btn" class="send-btn" title="Send text">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </form>
         </section>
 
         <!-- Categories -->

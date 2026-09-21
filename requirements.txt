@@ -1,5 +1,7 @@
 fastapi
 uvicorn
+python-multipart
+httpx
 
 # Orchestrator Agent dependencies
 langchain-openai>=0.2.0      # LangChain + OpenAI integration (pulls langchain-core)
